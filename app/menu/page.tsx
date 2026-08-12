@@ -92,7 +92,7 @@
           </div>
   {/* Tombol Hamburger (Hanya muncul di mobile) */}
       <button className="md:hidden p-2 -mr-2" onClick={() => setMenuOpen(!menuOpen)}>
-                    {menuOpen ? <X size={32} /> : <Menu size={32} />}
+                    {menuOpen ? <X size={28} /> : <Menu size={28} />}
       </button>
               <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-10 font-medium">
 
@@ -273,6 +273,14 @@
         </div>
       </div>
     ))}
+
+    <Link
+  href="/order"
+  className="bg-[#D4A373] text-black font-bold px-6 py-3 rounded-xl hover:bg-[#c39264] transition"
+>
+  Mulai Pesan Makanan
+</Link>
+
   </section>
         )}
       <footer className="w-full py-10 bg-[#0a0a0a] text-center border-t border-white/10 mt-20">

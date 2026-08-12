@@ -70,18 +70,14 @@ export default function AdminGalleryPage() {
      <header className="border-b border-white/10 bg-[#111111]">
         <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
           <Link href="/" className="relative ml-4 w-20 h-16 md:w-32 md:h-24 transition-transform hover:scale-105">
-                            <Image 
-                              src="/logo-bersandar1.png" 
-                              alt="Logo Bersandar"
-                              fill
-                              className="object-contain"
-                              priority
-                            />
-                          </Link>
+            <Image src="/logo-bersandar1.png" alt="Logo Bersandar" fill className="object-contain" priority/>
+          </Link>
 
           <nav className="hidden md:flex gap-10 font-medium">
-            <a href="/admin/dashboard" className="hover:text-[#D4A373]">Menu</a>
+            <a href="/admin/dashboard" className="hover:text-[#D4A373]">Katalog</a>
             <a href="/admin/gallery" className="text-[#D4A373]">Gallery</a>
+            <a href="/admin/menu" className="hover:text-[#D4A373]">Kelola Menu</a>
+            <a href="/admin/orders" className="hover:text-[#D4A373]">Pesanan</a>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -99,6 +95,9 @@ export default function AdminGalleryPage() {
           <div className="md:hidden bg-[#111] p-6 border-b border-white/10 flex flex-col gap-4">
             <a href="/admin/dashboard" onClick={() => setMenuOpen(false)}>Menu</a>
             <a href="/admin/gallery" className="text-[#D4A373]" onClick={() => setMenuOpen(false)}>Gallery</a>
+            <a href="/admin/menu" onClick={() => setMenuOpen(false)}>Kelola Menu</a>
+            <a href="/admin/orders" onClick={() => setMenuOpen(false)}>Pesanan</a>
+            <hr className="border-white/10" />
             <a href="/" onClick={() => setMenuOpen(false)}>Lihat Website</a>
           </div>
         )}

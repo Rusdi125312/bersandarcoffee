@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, X, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, X } from "lucide-react";
 
 type MenuItem = {
   id: number;
@@ -110,17 +110,11 @@ export default function OrderPage() {
       });
 
       if (res.ok) {
-        const result = await res.json();
-        
-        // Simpan data untuk ditampilkan di modal sukses/QRIS
-        setOrderSuccessData({
-          customerName,
-          tableNumber,
-          totalPrice,
-          paymentMethod,
-          items: [...cart],
-        });
-
+        alert(
+          paymentMethod === "kasir"
+            ? "Pesanan berhasil dikirim! Silakan lakukan pembayaran di kasir."
+            : "Pesanan berhasil dibuat! Silakan selesaikan pembayaran mandiri Anda."
+        );
         setCart([]);
         setCustomerName("");
         setIsMobileCartOpen(false);
@@ -435,59 +429,6 @@ export default function OrderPage() {
               className="w-full bg-[#D4A373] text-black font-bold py-4 rounded-xl hover:bg-[#c39264] transition disabled:opacity-50 shadow-lg"
             >
               {isSubmitting ? "Mengirim Pesanan..." : "Pesan Sekarang"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* --- MODAL / POPUP SETELAH BERHASIL PESAN (QRIS / KASIR) --- */}
-      {orderSuccessData && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl relative">
-            
-            <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
-              <CheckCircle2 size={36} />
-            </div>
-
-            <h2 className="text-2xl font-serif font-bold text-white mb-1">Pesanan Berhasil!</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              Terima kasih, <span className="text-[#D4A373] font-semibold">{orderSuccessData.customerName}</span>. Pesanan untuk Meja #{orderSuccessData.tableNumber} telah dikirim ke dapur.
-            </p>
-
-            {/* JIKA MEMILIH PEMBAYARAN MANDIRI (QRIS) */}
-            {orderSuccessData.paymentMethod === "mandiri" ? (
-              <div className="bg-black/40 border border-white/10 rounded-2xl p-4 mb-6">
-                <p className="text-xs text-gray-300 font-semibold mb-2">Scan QRIS di bawah untuk membayar:</p>
-                
-                {/* Tampilkan Gambar QRIS */}
-                <div className="relative w-48 h-48 mx-auto bg-white rounded-xl p-2 mb-3 shadow-inner">
-                  <Image 
-                    src="/qris-payment.png" 
-                    alt="QRIS Pembayaran" 
-                    fill 
-                    className="object-contain p-2" 
-                  />
-                </div>
-
-                <p className="text-xs text-[#D4A373] font-bold">
-                  Total Tagihan: Rp {orderSuccessData.totalPrice.toLocaleString()}
-                </p>
-                <p className="text-[10px] text-gray-500 mt-1">
-                  Mohon tunjukkan bukti transfer/scan kepada kasir jika diperlukan.
-                </p>
-              </div>
-            ) : (
-              /* JIKA MEMILIH BAYAR DI KASIR */
-              <div className="bg-black/40 border border-white/10 rounded-2xl p-4 mb-6 text-sm text-gray-300">
-                <p>Silakan lakukan pembayaran langsung di <span className="text-[#D4A373] font-bold">Kasir</span> dengan menyebutkan nama Anda.</p>
-              </div>
-            )}
-
-            <button
-              onClick={() => setOrderSuccessData(null)}
-              className="w-full bg-[#D4A373] text-black font-bold py-3 rounded-xl hover:bg-[#c39264] transition shadow-lg"
-            >
-              Tutup & Buat Pesanan Baru
             </button>
           </div>
         </div>

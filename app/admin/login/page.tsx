@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Coffee, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -113,26 +115,15 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="text-center mb-8">
 
-            <div
-              className="
-                w-20
-                h-20
-                mx-auto
-                rounded-2xl
-                bg-[#D4A373]/20
-                border
-                border-[#D4A373]/30
-                flex
-                items-center
-                justify-center
-                mb-5
-              "
-            >
-              <Coffee
-                size={36}
-                className="text-[#D4A373]"
-              />
-            </div>
+           <Link href="/" className="relative ml-4 w-20 h-16 md:w-32 md:h-24 transition-transform hover:scale-105">
+                  <Image 
+                    src="/logo-bersandar1.png" 
+                    alt="Logo Bersandar"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </Link>
 
             <h1
               className="

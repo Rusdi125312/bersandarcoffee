@@ -59,13 +59,13 @@ export default function Home() {
       <a href="/contact" className="hover:text-[#D4A373]">Contact</a>
     </div>
 
-    {/* Tombol Hamburger (Mobile) */}
-          <button className="lg:hidden p-2 text-white" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+      {/* Tombol Hamburger (Mobile) */}
+    <button className="lg:hidden p-2 text-white" onClick={() => setMenuOpen(!menuOpen)}>
+        {menuOpen ? <X size={28} /> : <Menu size={28} />}
+    </button>
 
-          {/* Lokasi */}
-  <a href="https://maps.app.goo.gl/6XYDm94RiDr1RMSy5" target="_blank" rel="noopener noreferrer"
+      {/* Lokasi */}
+   <a href="https://maps.app.goo.gl/6XYDm94RiDr1RMSy5" target="_blank" rel="noopener noreferrer"
     className="bg-[#D4A373]/90 px-4 py-2 md:px-6 md:py-3 rounded-xl flex items-center gap-2 text-sm md:text-base hover:bg-[#D4A373] transition">
       <MapPin size={16} /> <span className="hidden md:inline">Lokasi Kami</span>
   </a>
@@ -83,14 +83,14 @@ export default function Home() {
         )}
 </nav>
       {/* ================= HERO ================= */}
-      <section
-  className="relative min-h-screen flex items-center px-6 md:px-16"
-  style={{
-    backgroundImage: "url('/background-cafe.jpeg')",
-    backgroundPosition: "center",
-    backgroundSize: "cover",
-  }}
->
+  <section
+      className="relative min-h-screen flex items-center px-6 md:px-16"
+      style={{
+        backgroundImage: "url('/background-cafe.jpeg')",
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+      }}
+    >
   {/* Overlay */}
   <div className="absolute inset-0 bg-black/55" />
 
@@ -159,7 +159,6 @@ export default function Home() {
 </section>
 
       {/* ================= FEATURES ================= */}
-
 <section className="bg-[#F5F1EB] py-8">
   <div className="max-w-7xl mx-auto px-4 md:px-6 -mt-24 relative z-30">
     <div className="bg-white rounded-3xl shadow-xl overflow-hidden">

@@ -182,28 +182,25 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#111111] text-white">
-
-  {/* HEADER */}
- <header className="border-b border-white/10 bg-[#111111]">
-  <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-    <Link href="/" className="relative ml-4 w-20 h-16 md:w-32 md:h-24 transition-transform hover:scale-105">
-                            <Image 
-                              src="/logo-bersandar1.png" 
-                              alt="Logo Bersandar"
-                              fill
-                              className="object-contain"
-                              priority
-                            />
-                          </Link>
-
-    {/* Menu Desktop */}
+  <main className="min-h-screen bg-[#111111] text-white">
+    <header className="border-b border-white/10 bg-[#111111]">
+      <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+        <Link href="/" className="relative ml-4 w-20 h-16 md:w-32 md:h-24 transition-transform hover:scale-105">
+                                <Image 
+                                  src="/logo-bersandar1.png" 
+                                  alt="Logo Bersandar"
+                                  fill
+                                  className="object-contain"
+                                  priority
+                                />
+                              </Link>
     <nav className="hidden md:flex gap-10 font-medium">
-      <a href="/admin/dashboard" className="text-[#D4A373]">Menu</a>
+      <a href="/admin/dashboard" className="text-[#D4A373]">Katalog</a>
       <a href="/admin/gallery" className="hover:text-[#D4A373]">Gallery</a>
+      <a href="/admin/menu" className="hover:text-[#D4A373]">Menu</a>
+      <a href="/admin/orders" className="hover:text-[#D4A373]">Pesanan</a>
     </nav>
 
-{/* Tombol Hamburger & Lihat Website */}
     <div className="flex items-center gap-4">
       <Link href="/" className="hidden md:flex px-4 py-2 border border-white/10 rounded-xl hover:bg-white/10 items-center gap-2">
         <Globe size={16} /> Website
@@ -213,19 +210,17 @@ export default function DashboardPage() {
       </button>
     </div>
   </div>
-
-  {/* Mobile Menu */}
   {menuOpen && (
     <div className="md:hidden bg-[#1a1a1a] p-6 border-b border-white/10 flex flex-col gap-4">
-      <a href="/admin/dashboard" className="text-[#D4A373]">Menu</a>
+      <a href="/admin/dashboard" className="text-[#D4A373]">Katalog</a>
       <a href="/admin/gallery">Gallery</a>
+      <a href="/admin/menu">Menu</a>
+      <a href="/admin/orders">Pesanan</a>
       <hr className="border-white/10" />
       <a href="/">Lihat Website</a>
     </div>
   )}
 </header>
-
-  {/* HERO */}
   <section className="max-w-7xl mx-auto px-6 pt-10">
 
     <div className="rounded-3xl bg-gradient-to-r from-[#1b1b1b] to-[#222] border border-white/10 p-10">

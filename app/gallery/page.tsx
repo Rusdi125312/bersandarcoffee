@@ -54,7 +54,7 @@ export default function GalleryPage() {
 
             {/* Tombol Hamburger - Posisinya sudah di paling kanan secara alami oleh flex justify-end */}
             <button className="md:hidden p-2 -mr-2" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <X size={32} /> : <Menu size={32} />}
+              {menuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
