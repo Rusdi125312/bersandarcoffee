@@ -90,34 +90,23 @@
                   />
                 </Link>
           </div>
-  {/* Tombol Hamburger (Hanya muncul di mobile) */}
+      {/* Tombol Hamburger (Hanya muncul di mobile) */}
       <button className="md:hidden p-2 -mr-2" onClick={() => setMenuOpen(!menuOpen)}>
                     {menuOpen ? <X size={28} /> : <Menu size={28} />}
       </button>
               <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-10 font-medium">
 
-                <a href="/" className="hover:text-[#D4A373]">
-                  Home
-                </a>
-                <a href="/menu" className="text-[#D4A373]">
-                Menu
-                </a>
-                <a href="/gallery" className="hover:text-[#D4A373]">
-                  Gallery
-                </a>
-                <a href="/contact" className="hover:text-[#D4A373]">
-                  Contact
-                </a>
+                <a href="/" className="hover:text-[#D4A373]">Home</a>
+                <a href="/menu" className="text-[#D4A373]">Menu</a>
+                <a href="/gallery" className="hover:text-[#D4A373]">Gallery</a>
+                <a href="/contact" className="hover:text-[#D4A373]">Contact</a>
               </nav>
           
-              <a
-                href="https://wa.me/6285280020604?text=Halo%20Admin%20Bersandar,%20saya%20ingin%20melakukan%20reservasi%20tempat." 
+              <a href="https://wa.me/6285280020604?text=Halo%20Admin%20Bersandar,%20saya%20ingin%20melakukan%20reservasi%20tempat." 
                 target="_blank"
                 className="
                  hidden md:flex border border-white/20 hover:border-[#D4A373] px-6 py-2 rounded-xl hover:bg-[#D4A373] transition whitespace-nowrap"
-              >
-                Reservasi
-              </a>
+              >Reservasi</a>
 
             </div>
           

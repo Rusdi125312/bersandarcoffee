@@ -122,7 +122,7 @@ export default function AdminOrders() {
         
         {/* Menu Desktop */}
         <nav className="hidden md:flex gap-10 font-medium">
-          <a href="/admin/dashboard" className="hover:text-[#D4A373]">Katalog Menu</a>
+          <a href="/admin/dashboard" className="hover:text-[#D4A373]">Katalog</a>
           <a href="/admin/gallery" className="hover:text-[#D4A373]">Gallery</a>
           <a href="/admin/menu" className="hover:text-[#D4A373]">Menu</a>
           <a href="/admin/orders" className="text-[#D4A373]">Pesanan</a>
