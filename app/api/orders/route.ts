@@ -23,20 +23,25 @@ export async function POST(request: Request) {
           items,
           total_price,
           payment_method: payment_method || "kasir",
+          payment_proof: null, // Set payment_proof to null
           status: status || "pending",
         },
       ])
       .select();
 
-    if (error) {
-      console.error("Supabase Error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+ // Di dalam file API route POST Anda
+if (error) {
+  console.error("Supabase Error:", error);
+  return NextResponse.json({ error: error.message }, { status: 500 });
+}
 
-    return NextResponse.json(
-      { message: "Pesanan berhasil dibuat", data },
-      { status: 200 }
-    );
+// Ambil ID dari baris pertama data yang baru di-insert
+const newOrder = data && data.length > 0 ? data[0] : null;
+
+return NextResponse.json(
+  { message: "Pesanan berhasil dibuat", id: newOrder?.id, data },
+  { status: 200 }
+);
   } catch (err: any) {
     console.error("API Error:", err);
     return NextResponse.json(

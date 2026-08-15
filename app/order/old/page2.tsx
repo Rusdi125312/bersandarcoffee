@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, X, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, X, CheckCircle2, Upload } from "lucide-react";
 
 type MenuItem = {
   id: number;
@@ -13,12 +13,13 @@ type MenuItem = {
   harga: number;
   deskripsi: string;
   gambar: string;
-  variant_type: "both" | "ice_only" | "hot_only" | "none";
+  variant_type?: "both" | "ice_only" | "hot_only" | "none";
 };
 
 type CartItem = MenuItem & {
   quantity: number;
   variant?: "Hot" | "Ice";
+  notes?: string;
 };
 
 export default function OrderPage() {
@@ -29,8 +30,10 @@ export default function OrderPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [tableNumber, setTableNumber] = useState("1");
-  const [paymentMethod, setPaymentMethod] = useState("kasir");
+  const [paymentMethod, setPaymentMethod] = useState("kasir"); 
+  const [orderNotes, setOrderNotes] = useState(""); 
   
+  // State untuk alur pembayaran setelah checkout
   const [currentOrderId, setCurrentOrderId] = useState<number | null>(null);
   const [paymentStep, setPaymentStep] = useState<"cart" | "instruction">("cart");
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
@@ -40,6 +43,8 @@ export default function OrderPage() {
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   const [selectedVariants, setSelectedVariants] = useState<Record<number, "Hot" | "Ice">>({});
+  const [itemNotes, setItemNotes] = useState<Record<number, string>>({});
+
   const [orderSuccessData, setOrderSuccessData] = useState<any>(null);
 
   useEffect(() => {
@@ -77,24 +82,28 @@ export default function OrderPage() {
       variant = selectedVariants[item.id] || "Ice";
     }
 
+    const note = itemNotes[item.id] || "";
+
     setCart((prev) => {
       const existingIndex = prev.findIndex(
-        (i) => i.id === item.id && i.variant === variant
+        (i) => i.id === item.id && i.variant === variant && i.notes === note
       );
 
       if (existingIndex > -1) {
-        return prev.map((i, index) =>
+        return prev.map((i, index) => 
           index === existingIndex ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { ...item, quantity: 1, variant }];
+      return [...prev, { ...item, quantity: 1, variant, notes: note }];
     });
+
+    setItemNotes((prev) => ({ ...prev, [item.id]: "" }));
   };
 
-  const decreaseQuantity = (id: number, variant?: "Hot" | "Ice") => {
+  const decreaseQuantity = (id: number, variant?: "Hot" | "Ice", notes?: string) => {
     setCart((prev) => {
       return prev
-        .map((i) => (i.id === id && i.variant === variant ? { ...i, quantity: i.quantity - 1 } : i))
+        .map((i) => (i.id === id && i.variant === variant && i.notes === notes ? { ...i, quantity: i.quantity - 1 } : i))
         .filter((i) => i.quantity > 0);
     });
   };
@@ -109,6 +118,7 @@ export default function OrderPage() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.harga * item.quantity, 0);
 
+  // Tahap 1: Kirim Pesanan ke Database
   const handleCheckout = async () => {
     if (!customerName.trim()) {
       alert("Mohon masukkan nama pemesan terlebih dahulu!");
@@ -128,80 +138,84 @@ export default function OrderPage() {
         items: cart,
         total_price: totalPrice,
         payment_method: paymentMethod,
+        order_notes: orderNotes,
         payment_proof: null,
         status: "pending",
       };
 
-      const { data, error } = await supabase
-        .from("menu_order")
-        .insert([orderData])
-        .select()
-        .single();
+     const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
 
-      if (error) {
-        console.error("Supabase Insert Error:", error);
-        alert(`Gagal mengirim pesanan: ${error.message}`);
-        setIsSubmitting(false);
-        return;
-      }
+      const result = await res.json();
 
-      if (data) {
-        setCurrentOrderId(data.id);
+      if (res.ok) {
+        // PERBAIKAN DI SINI: Ambil result.id dari API yang sudah diperbarui
+        setCurrentOrderId(result.id); 
         setPaymentStep("instruction");
         setIsMobileCartOpen(false);
+      } else {
+        alert("Gagal mengirim pesanan. Silakan coba lagi.");
       }
+
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi sistem.");
+      alert("Terjadi kesalahan koneksi.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Tahap 2A: Upload Bukti Transfer (Jika pilih Transfer/QRIS)
   const handleUploadProof = async () => {
-    if (!paymentProof) {
-      alert("Silakan pilih file bukti transfer terlebih dahulu.");
+  if (!paymentProof) {
+    alert("Silakan pilih file bukti transfer terlebih dahulu.");
+    return;
+  }
+
+  setIsUploadingProof(true);
+  try {
+    const fileExt = paymentProof.name.split(".").pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    
+    // Pastikan nama bucket di sini sama persis dengan yang ada di Supabase Storage Anda
+    const { error: uploadError } = await supabase.storage
+      .from("payment_proof") 
+      .upload(fileName, paymentProof);
+
+    if (uploadError) {
+      console.error("Supabase Storage Error:", uploadError);
+      alert(`Gagal mengunggah: ${uploadError.message}`);
+      setIsUploadingProof(false);
       return;
     }
 
-    setIsUploadingProof(true);
-    try {
-      const fileExt = paymentProof.name.split(".").pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("payment_proof")
-        .upload(fileName, paymentProof);
+    const { data: publicUrlData } = supabase.storage
+      .from("payment_proof")
+      .getPublicUrl(fileName);
 
-      if (uploadError) {
-        console.error("Supabase Storage Error:", uploadError);
-        alert(`Gagal mengunggah bukti: ${uploadError.message}`);
-        setIsUploadingProof(false);
-        return;
-      }
+    const proofUrl = publicUrlData.publicUrl;
 
-      const { data: publicUrlData } = supabase.storage
-        .from("payment_proof")
-        .getPublicUrl(fileName);
-
-      const proofUrl = publicUrlData.publicUrl;
-
-      if (currentOrderId) {
-        await supabase
-          .from("menu_order")
-          .update({ payment_proof: proofUrl })
-          .eq("id", currentOrderId);
-      }
-
-      finalizeOrderSuccess();
-    } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan saat mengunggah bukti pembayaran.");
-    } finally {
-      setIsUploadingProof(false);
+    // Perbarui kolom 'payment_proof' sesuai dengan struktur tabel Anda
+    if (currentOrderId) {
+      await supabase
+        .from("menu_order") // Sesuai dengan nama tabel Anda
+        .update({ payment_proof: proofUrl }) // Menggunakan kolom payment_proof
+        .eq("id", currentOrderId);
     }
-  };
 
+    finalizeOrderSuccess();
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi kesalahan sistem saat mengunggah.");
+  } finally {
+    setIsUploadingProof(false);
+  }
+};
+
+  // Selesaikan Proses Pesanan
   const finalizeOrderSuccess = () => {
     setOrderSuccessData({
       customerName,
@@ -211,8 +225,10 @@ export default function OrderPage() {
       items: [...cart],
     });
 
+    // Reset State
     setCart([]);
     setCustomerName("");
+    setOrderNotes("");
     setPaymentProof(null);
     setPaymentStep("cart");
     setCurrentOrderId(null);
@@ -227,19 +243,20 @@ export default function OrderPage() {
         <h1 className="font-serif text-lg font-bold text-[#D4A373] text-center">
           Self-Order
         </h1>
-        <div className="relative ml-auto w-20 h-12 md:w-28 md:h-16">
-          <Image
+        <Link href="/" className="relative ml-auto w-20 h-12 md:w-28 md:h-16 transition-transform hover:scale-105">
+          <Image 
             src="/logo-bersandar1.png"
             alt="Logo Bersandar"
             fill
             className="object-contain"
             priority
           />
-        </div>
+        </Link>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
+        {/* KOLOM KIRI: DAFTAR MENU */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/10 shadow-lg">
             <h2 className="text-xl font-bold mb-3 text-[#D4A373]">Informasi Meja</h2>
@@ -267,6 +284,7 @@ export default function OrderPage() {
             </div>
           </div>
 
+          {/* FILTER KATEGORI */}
           <div className="flex flex-nowrap overflow-x-auto scrollbar-hide gap-3 py-2">
             {["Semua", ...Object.keys(groupedMenus)].map((kat) => (
               <button
@@ -295,7 +313,7 @@ export default function OrderPage() {
                       <h3 className="text-2xl font-serif font-bold text-[#D4A373] mb-4">{kategori}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {items.map((item) => {
-                          const variantSetting = item.variant_type || "none";
+                          const variantSetting = item.variant_type || "none"; 
 
                           return (
                             <div
@@ -304,9 +322,9 @@ export default function OrderPage() {
                             >
                               <div className="flex gap-4 items-center">
                                 <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-black/50">
-                                  <img
-                                    src={item.gambar || "/placeholder.png"}
-                                    alt={item.nama}
+                                  <img 
+                                    src={item.gambar || "/placeholder.png"} 
+                                    alt={item.nama} 
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
@@ -320,45 +338,61 @@ export default function OrderPage() {
                               </div>
 
                               {variantSetting === "both" && (
-                                <div className="mt-3 flex items-center gap-2">
+                                <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
                                   <span className="text-xs text-gray-400">Varian:</span>
-                                  <div className="grid grid-cols-2 gap-2 flex-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedVariants((prev) => ({ ...prev, [item.id]: "Ice" }))}
-                                      className={`py-1 text-xs rounded-lg border transition ${
-                                        (selectedVariants[item.id] || "Ice") === "Ice"
-                                          ? "bg-[#D4A373] text-black border-[#D4A373] font-bold"
-                                          : "bg-black/30 text-gray-400 border-white/10"
-                                      }`}
-                                    >
-                                      Ice
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedVariants((prev) => ({ ...prev, [item.id]: "Hot" }))}
-                                      className={`py-1 text-xs rounded-lg border transition ${
-                                        selectedVariants[item.id] === "Hot"
-                                          ? "bg-[#D4A373] text-black border-[#D4A373] font-bold"
-                                          : "bg-black/30 text-gray-400 border-white/10"
-                                      }`}
-                                    >
-                                      Hot
-                                    </button>
+                                  <div className="flex gap-1.5">
+                                    {(["Ice", "Hot"] as const).map((v) => {
+                                      const active = (selectedVariants[item.id] || "Ice") === v;
+                                      return (
+                                        <button
+                                          key={v}
+                                          type="button"
+                                          onClick={() =>
+                                            setSelectedVariants((prev) => ({ ...prev, [item.id]: v }))
+                                          }
+                                          className={`px-3 py-1 rounded-lg text-xs font-medium transition border ${
+                                            active
+                                              ? "bg-[#D4A373] text-black border-[#D4A373]"
+                                              : "bg-black/40 text-gray-400 border-white/10 hover:border-white/20"
+                                          }`}
+                                        >
+                                          {v}
+                                        </button>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
 
                               {variantSetting === "ice_only" && (
-                                <div className="mt-2 text-[11px] text-[#D4A373] italic">Khusus Dingin (Ice)</div>
+                                <div className="mt-3 pt-3 border-t border-white/10 text-xs text-gray-400 flex justify-between">
+                                  <span>Varian:</span>
+                                  <span className="text-[#D4A373] font-semibold">Ice Only</span>
+                                </div>
                               )}
+
                               {variantSetting === "hot_only" && (
-                                <div className="mt-2 text-[11px] text-[#D4A373] italic">Khusus Panas (Hot)</div>
+                                <div className="mt-3 pt-3 border-t border-white/10 text-xs text-gray-400 flex justify-between">
+                                  <span>Varian:</span>
+                                  <span className="text-[#D4A373] font-semibold">Hot Only</span>
+                                </div>
                               )}
+
+                              <div className="mt-2">
+                                <input
+                                  type="text"
+                                  placeholder="Catatan item (mis: kurang manis, es dikit)..."
+                                  value={itemNotes[item.id] || ""}
+                                  onChange={(e) =>
+                                    setItemNotes((prev) => ({ ...prev, [item.id]: e.target.value }))
+                                  }
+                                  className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:border-[#D4A373] outline-none transition"
+                                />
+                              </div>
 
                               <button
                                 onClick={() => addToCart(item)}
-                                className="w-full mt-4 bg-[#D4A373] text-black font-bold py-2 rounded-xl text-sm hover:bg-[#c39264] transition"
+                                className="w-full mt-3 bg-[#D4A373] text-black font-bold py-2 rounded-xl text-sm hover:bg-[#c39264] transition"
                               >
                                 + Pilih
                               </button>
@@ -373,6 +407,7 @@ export default function OrderPage() {
           )}
         </div>
 
+        {/* KOLOM KANAN: RINGKASAN KERANJANG (DESKTOP) */}
         <div className="hidden lg:block lg:col-span-1">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 sticky top-24 shadow-xl space-y-4">
             <h3 className="text-xl font-serif font-bold text-[#D4A373]">Keranjang Pesanan</h3>
@@ -381,18 +416,19 @@ export default function OrderPage() {
               <p className="text-gray-500 text-sm py-8 text-center">Belum ada menu yang dipilih.</p>
             ) : (
               <div className="space-y-4">
-                <div className="divide-y divide-white/10 max-h-[35vh] overflow-y-auto pr-1">
+                <div className="divide-y divide-white/10 max-h-[30vh] overflow-y-auto pr-1">
                   {cart.map((item, idx) => (
-                    <div key={idx} className="py-3 flex justify-between items-center text-sm">
+                    <div key={idx} className="py-3 flex justify-between items-start text-sm">
                       <div className="pr-2 flex-1">
                         <p className="font-semibold">
                           {item.nama} {item.variant && <span className="text-xs text-[#D4A373]">({item.variant})</span>}
                         </p>
+                        {item.notes && <p className="text-[11px] text-gray-400 italic">Catatan: {item.notes}</p>}
                         <p className="text-xs text-gray-400 mt-0.5">{formatPrice(item.harga)} x {item.quantity}</p>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2 flex-shrink-0 pt-1">
                         <button
-                          onClick={() => decreaseQuantity(item.id, item.variant)}
+                          onClick={() => decreaseQuantity(item.id, item.variant, item.notes)}
                           className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center font-bold hover:bg-white/20"
                         >
                           -
@@ -407,6 +443,17 @@ export default function OrderPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Catatan Pesanan (Opsional)</label>
+                  <input
+                    type="text"
+                    placeholder="Mis: Pisahkan sambal, saus banyak..."
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:border-[#D4A373] outline-none transition"
+                  />
                 </div>
 
                 <div className="border-t border-white/10 pt-3">
@@ -453,7 +500,7 @@ export default function OrderPage() {
                   disabled={isSubmitting}
                   className="w-full bg-[#D4A373] text-black font-bold py-3.5 rounded-xl hover:bg-[#c39264] transition disabled:opacity-50 shadow-lg text-sm"
                 >
-                  {isSubmitting ? "Mengirim Pesanan..." : "Pesan & Bayar Sekarang"}
+                  {isSubmitting ? "Mengirim Pesanan..." : "Pesan Sekarang"}
                 </button>
               </div>
             )}
@@ -462,6 +509,7 @@ export default function OrderPage() {
 
       </div>
 
+      {/* FLOATING CART BAR (MOBILE) */}
       {cart.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a]/95 border-t border-white/10 p-4 lg:hidden backdrop-blur-md z-40 flex items-center justify-between shadow-2xl">
           <div>
@@ -477,12 +525,13 @@ export default function OrderPage() {
         </div>
       )}
 
+      {/* MODAL KERANJANG MOBILE */}
       {isMobileCartOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 flex flex-col justify-end lg:hidden backdrop-blur-sm">
           <div className="bg-[#1a1a1a] border-t border-white/10 rounded-t-3xl p-6 max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
               <h3 className="text-xl font-serif font-bold text-[#D4A373]">Keranjang Pesanan</h3>
-              <button
+              <button 
                 onClick={() => setIsMobileCartOpen(false)}
                 className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
               >
@@ -492,16 +541,17 @@ export default function OrderPage() {
 
             <div className="divide-y divide-white/10 overflow-y-auto flex-1 pr-1 space-y-2 mb-4">
               {cart.map((item, idx) => (
-                <div key={idx} className="py-3 flex justify-between items-center text-sm">
+                <div key={idx} className="py-3 flex justify-between items-start text-sm">
                   <div className="pr-2 flex-1">
                     <p className="font-semibold">
                       {item.nama} {item.variant && <span className="text-xs text-[#D4A373]">({item.variant})</span>}
                     </p>
+                    {item.notes && <p className="text-[11px] text-gray-400 italic">Catatan: {item.notes}</p>}
                     <p className="text-xs text-gray-400 mt-0.5">{formatPrice(item.harga)} x {item.quantity}</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 pt-1">
                     <button
-                      onClick={() => decreaseQuantity(item.id, item.variant)}
+                      onClick={() => decreaseQuantity(item.id, item.variant, item.notes)}
                       className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center font-bold"
                     >
                       -
@@ -516,6 +566,17 @@ export default function OrderPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs text-gray-400 mb-1">Catatan Pesanan</label>
+              <input
+                type="text"
+                placeholder="Catatan tambahan..."
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-xs text-white outline-none"
+              />
             </div>
 
             <div className="border-t border-white/10 pt-3 space-y-2 mb-3">
@@ -558,12 +619,13 @@ export default function OrderPage() {
               disabled={isSubmitting}
               className="w-full bg-[#D4A373] text-black font-bold py-3.5 rounded-xl hover:bg-[#c39264] transition disabled:opacity-50 shadow-lg text-sm"
             >
-              {isSubmitting ? "Mengirim Pesanan..." : "Pesan & Bayar Sekarang"}
+              {isSubmitting ? "Mengirim Pesanan..." : "Pesan Sekarang"}
             </button>
           </div>
         </div>
       )}
 
+      {/* MODAL INSTRUKSI PEMBAYARAN SETELAH PESAN (MUNCUL SESUAI METODE) */}
       {paymentStep === "instruction" && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative text-left">
@@ -574,16 +636,16 @@ export default function OrderPage() {
                 <p className="text-sm text-gray-300">
                   Silakan lakukan pembayaran sejumlah <strong className="text-[#D4A373]">{formatPrice(totalPrice)}</strong> melalui Transfer / QRIS ke rekening berikut:
                 </p>
-                <div className="bg-black/40 p-4 rounded-xl border border-white/10 text-xs text-gray-300 space-y-1">
+                <div className="bg-black/40 p-3 rounded-xl border border-white/10 text-xs text-gray-300 space-y-1">
                   <p>Bank Mandiri: <strong>1234-5678-9012</strong></p>
                   <p>Atas Nama: <strong>Kafe Bersandar</strong></p>
                   <div className="mt-3 flex justify-center">
-                    <img
-                      src="/path-ke-gambar-qris-anda.jpg"
-                      alt="QRIS Pembayaran"
-                      className="w-32 h-32 rounded-lg border border-white/20 object-cover"
-                    />
-                  </div>
+                  <img 
+                    src="/path-ke-gambar-qris-anda.jpg" 
+                    alt="QRIS Pembayaran" 
+                    className="w-32 h-32 rounded-lg border border-white/20"
+                  />
+                </div>
                 </div>
 
                 <div className="space-y-2">
@@ -606,15 +668,15 @@ export default function OrderPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-amber-300 text-sm leading-relaxed">
-                  Silakan segera mendatangi kasir untuk menyelesaikan pembayaran pesanan Meja <strong>#{tableNumber}</strong> atas nama <strong className="text-white">{customerName}</strong> senilai <span className="font-bold">{formatPrice(totalPrice)}</span>.
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-amber-300 text-sm">
+                  Silakan segera <strong>bayar ke kasir</strong> untuk menyelesaikan pesanan meja Anda senilai <span className="font-bold">{formatPrice(totalPrice)}</span>.
                 </div>
 
                 <button
                   onClick={finalizeOrderSuccess}
                   className="w-full bg-[#D4A373] text-black font-bold py-3 rounded-xl hover:bg-[#c39264] transition shadow-lg text-sm"
                 >
-                  Selesai & Tunggu Pesanan
+                  Saya Sudah ke Kasir / Selesai
                 </button>
               </div>
             )}
@@ -622,6 +684,7 @@ export default function OrderPage() {
         </div>
       )}
 
+      {/* MODAL SUKSES FINAL */}
       {orderSuccessData && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl relative">
@@ -630,15 +693,15 @@ export default function OrderPage() {
             </div>
 
             <h2 className="text-2xl font-serif font-bold text-white mb-1">Pesanan Berhasil!</h2>
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-              Terima kasih, <span className="text-[#D4A373] font-semibold">{orderSuccessData.customerName}</span>. Pesanan untuk Meja <strong className="text-white">#{orderSuccessData.tableNumber}</strong> telah dikirim ke dapur. Mohon menunggu, pesanan Anda akan segera diantarkan ke meja Anda.
+            <p className="text-sm text-gray-400 mb-6">
+              Terima kasih, <span className="text-[#D4A373] font-semibold">{orderSuccessData.customerName}</span>. Pesanan untuk Meja #{orderSuccessData.tableNumber} telah dikirim ke dapur.
             </p>
 
             <button
               onClick={() => setOrderSuccessData(null)}
               className="w-full bg-[#D4A373] text-black font-bold py-3 rounded-xl hover:bg-[#c39264] transition shadow-lg text-sm"
             >
-              Tutup
+              Tutup & Buat Pesanan Baru
             </button>
           </div>
         </div>
