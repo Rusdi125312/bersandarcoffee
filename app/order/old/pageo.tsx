@@ -13,10 +13,12 @@ type MenuItem = {
   harga: number;
   deskripsi: string;
   gambar: string;
+  variant_type: "both" | "ice_only" | "hot_only" | "none";
 };
 
 type CartItem = MenuItem & {
   quantity: number;
+  variant?: "Hot" | "Ice";
 };
 
 export default function OrderPage() {
@@ -36,6 +38,8 @@ export default function OrderPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+
+  const [selectedVariants, setSelectedVariants] = useState<Record<number, "Hot" | "Ice">>({});
   const [orderSuccessData, setOrderSuccessData] = useState<any>(null);
 
   useEffect(() => {
@@ -62,22 +66,35 @@ export default function OrderPage() {
   };
 
   const addToCart = (item: MenuItem) => {
+    const variantSetting = item.variant_type || "none";
+    
+    let variant: "Hot" | "Ice" | undefined = undefined;
+    if (variantSetting === "ice_only") {
+      variant = "Ice";
+    } else if (variantSetting === "hot_only") {
+      variant = "Hot";
+    } else if (variantSetting === "both") {
+      variant = selectedVariants[item.id] || "Ice";
+    }
+
     setCart((prev) => {
-      const existingIndex = prev.findIndex((i) => i.id === item.id);
+      const existingIndex = prev.findIndex(
+        (i) => i.id === item.id && i.variant === variant
+      );
 
       if (existingIndex > -1) {
         return prev.map((i, index) =>
           index === existingIndex ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, quantity: 1, variant }];
     });
   };
 
-  const decreaseQuantity = (id: number) => {
+  const decreaseQuantity = (id: number, variant?: "Hot" | "Ice") => {
     setCart((prev) => {
       return prev
-        .map((i) => (i.id === id ? { ...i, quantity: i.quantity - 1 } : i))
+        .map((i) => (i.id === id && i.variant === variant ? { ...i, quantity: i.quantity - 1 } : i))
         .filter((i) => i.quantity > 0);
     });
   };
@@ -278,6 +295,8 @@ export default function OrderPage() {
                       <h3 className="text-2xl font-serif font-bold text-[#D4A373] mb-4">{kategori}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {items.map((item) => {
+                          const variantSetting = item.variant_type || "none";
+
                           return (
                             <div
                               key={item.id}
@@ -299,6 +318,43 @@ export default function OrderPage() {
                                   </p>
                                 </div>
                               </div>
+
+                              {variantSetting === "both" && (
+                                <div className="mt-3 flex items-center gap-2">
+                                  <span className="text-xs text-gray-400">Varian:</span>
+                                  <div className="grid grid-cols-2 gap-2 flex-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedVariants((prev) => ({ ...prev, [item.id]: "Ice" }))}
+                                      className={`py-1 text-xs rounded-lg border transition ${
+                                        (selectedVariants[item.id] || "Ice") === "Ice"
+                                          ? "bg-[#D4A373] text-black border-[#D4A373] font-bold"
+                                          : "bg-black/30 text-gray-400 border-white/10"
+                                      }`}
+                                    >
+                                      Ice
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedVariants((prev) => ({ ...prev, [item.id]: "Hot" }))}
+                                      className={`py-1 text-xs rounded-lg border transition ${
+                                        selectedVariants[item.id] === "Hot"
+                                          ? "bg-[#D4A373] text-black border-[#D4A373] font-bold"
+                                          : "bg-black/30 text-gray-400 border-white/10"
+                                      }`}
+                                    >
+                                      Hot
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {variantSetting === "ice_only" && (
+                                <div className="mt-2 text-[11px] text-[#D4A373] italic">Khusus Dingin (Ice)</div>
+                              )}
+                              {variantSetting === "hot_only" && (
+                                <div className="mt-2 text-[11px] text-[#D4A373] italic">Khusus Panas (Hot)</div>
+                              )}
 
                               <button
                                 onClick={() => addToCart(item)}
@@ -329,12 +385,14 @@ export default function OrderPage() {
                   {cart.map((item, idx) => (
                     <div key={idx} className="py-3 flex justify-between items-center text-sm">
                       <div className="pr-2 flex-1">
-                        <p className="font-semibold">{item.nama}</p>
+                        <p className="font-semibold">
+                          {item.nama} {item.variant && <span className="text-xs text-[#D4A373]">({item.variant})</span>}
+                        </p>
                         <p className="text-xs text-gray-400 mt-0.5">{formatPrice(item.harga)} x {item.quantity}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                          onClick={() => decreaseQuantity(item.id)}
+                          onClick={() => decreaseQuantity(item.id, item.variant)}
                           className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center font-bold hover:bg-white/20"
                         >
                           -
@@ -436,12 +494,14 @@ export default function OrderPage() {
               {cart.map((item, idx) => (
                 <div key={idx} className="py-3 flex justify-between items-center text-sm">
                   <div className="pr-2 flex-1">
-                    <p className="font-semibold">{item.nama}</p>
+                    <p className="font-semibold">
+                      {item.nama} {item.variant && <span className="text-xs text-[#D4A373]">({item.variant})</span>}
+                    </p>
                     <p className="text-xs text-gray-400 mt-0.5">{formatPrice(item.harga)} x {item.quantity}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
-                      onClick={() => decreaseQuantity(item.id)}
+                      onClick={() => decreaseQuantity(item.id, item.variant)}
                       className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center font-bold"
                     >
                       -

@@ -16,7 +16,9 @@ import {
   Banknote,
   X,
   Globe,
-  Menu
+  Menu,
+  CheckCheck,
+  ArrowRight
 } from "lucide-react";
 
 type OrderItem = {
@@ -43,12 +45,12 @@ export default function DashboardKasirPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("pending");
-  const [menuOpen, setMenuOpen] = useState(false); // <-- Perbaikan: State menuOpen ditambahkan di sini
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // State Modal Bukti Transfer
   const [selectedProof, setSelectedProof] = useState<string | null>(null);
 
-  // State Modal Pembayaran Tunai & Kembalian
+  // State Modal Pembayaran Tunai & Kembalian (Lebih Keren)
   const [cashModalOpen, setCashModalOpen] = useState(false);
   const [activeCashOrder, setActiveCashOrder] = useState<Order | null>(null);
   const [cashGiven, setCashGiven] = useState<string>("");
@@ -56,7 +58,6 @@ export default function DashboardKasirPage() {
   useEffect(() => {
     fetchOrders();
 
-    // Realtime subscription untuk mendengarkan pesanan baru/perubahan
     const channel = supabase
       .channel("menu_order_changes")
       .on(
@@ -86,8 +87,43 @@ export default function DashboardKasirPage() {
     setLoading(false);
   }
 
+  // Fungsi Kirim Data ke Google Sheets (Google Apps Script Web App URL)
+  const sendToGoogleSheets = async (order: Order) => {
+    try {
+      // Ganti URL di bawah ini dengan Web App URL dari Google Apps Script Anda
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby3bA4apWpyBtmGRmmnM1UKqKhTiy47cnpoH6Rg12x0ZWfmg_mMz5G0zBuEb43C8Jd6UQ/exec"; 
+      if (WEB_APP_URL.includes("ANDA_DI_SINI")) return;
+
+      const payload = {
+        id: order.id,
+        customer_name: order.customer_name,
+        table_number: order.table_number,
+        total_price: order.total_price,
+        payment_method: order.payment_method,
+        items: order.items.map(i => `${i.nama} (${i.variant || '-'}) x${i.quantity}`).join(", "),
+        created_at: order.created_at || new Date().toISOString()
+      };
+
+      await fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Gagal sinkron ke Google Sheets:", err);
+    }
+  };
+
   // Update Status Pesanan
   const updateOrderStatus = async (id: number, newStatus: "pending" | "proses" | "selesai" | "batal") => {
+    // Cari data order saat ini
+    const currentOrder = orders.find(o => o.id === id);
+    if (currentOrder && currentOrder.status === "selesai") {
+      alert("Pesanan yang sudah selesai tidak dapat diubah kembali!");
+      return;
+    }
+
     const { error } = await supabase
       .from("menu_order")
       .update({ status: newStatus })
@@ -96,6 +132,10 @@ export default function DashboardKasirPage() {
     if (error) {
       alert(`Gagal memperbarui status: ${error.message}`);
     } else {
+      // Jika status diubah menjadi selesai, kirim ke Google Sheets
+      if (newStatus === "selesai" && currentOrder) {
+        sendToGoogleSheets(currentOrder);
+      }
       fetchOrders();
     }
   };
@@ -120,13 +160,11 @@ export default function DashboardKasirPage() {
     return `Rp ${price.toLocaleString("id-ID")}`;
   };
 
-  // Filter Data Sesuai Tab Aktif
   const filteredOrders = orders.filter((order) => {
     if (filterStatus === "semua") return true;
     return order.status === filterStatus;
   });
 
-  // Hitung Kembalian Tunai
   const cashNumber = parseInt(cashGiven) || 0;
   const changeAmount = activeCashOrder ? cashNumber - activeCashOrder.total_price : 0;
 
@@ -141,7 +179,6 @@ export default function DashboardKasirPage() {
     setCashModalOpen(false);
     setActiveCashOrder(null);
     setCashGiven("");
-    alert(`Pembayaran tunai berhasil diproses. Kembalian: ${formatPrice(changeAmount)}`);
   };
 
   const printReceipt = (order: Order) => {
@@ -242,7 +279,6 @@ export default function DashboardKasirPage() {
           <p className="text-sm text-gray-400 mt-1">Bersandar Café & Space — Live Orders</p>
         </div>
 
-        {/* FILTER STATUS TABS */}
         <div className="flex flex-wrap gap-2 bg-[#1a1a1a] p-1.5 rounded-2xl border border-white/10">
           {[
             { key: "pending", label: "Pending" },
@@ -266,7 +302,6 @@ export default function DashboardKasirPage() {
         </div>
       </div>
 
-      {/* DAFTAR CARD PESANAN */}
       {loading ? (
         <div className="text-center py-24 text-gray-500">Memuat data pesanan...</div>
       ) : filteredOrders.length === 0 ? (
@@ -279,14 +314,16 @@ export default function DashboardKasirPage() {
           {filteredOrders.map((order) => {
             const isTransfer = order.payment_method === "transfer";
             const isPending = order.status === "pending";
-            const isProsesOrSelesai = order.status === "proses" || order.status === "selesai";
+            const isProses = order.status === "proses";
+            const isSelesai = order.status === "selesai";
 
             return (
               <div
                 key={order.id}
-                className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 shadow-xl flex flex-col justify-between hover:border-white/20 transition relative"
+                className={`bg-[#1a1a1a] border rounded-3xl p-6 shadow-xl flex flex-col justify-between transition relative ${
+                  isSelesai ? "border-green-500/30 bg-gradient-to-b from-[#1a1a1a] to-green-950/10" : "border-white/10 hover:border-white/20"
+                }`}
               >
-                {/* BAGIAN ATAS CARD: MEJA & NAMA & STATUS BADGE */}
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -308,7 +345,6 @@ export default function DashboardKasirPage() {
                     </span>
                   </div>
 
-                  {/* LABEL METODE BAYAR */}
                   <div className="mb-4">
                     <span
                       className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg ${
@@ -321,7 +357,6 @@ export default function DashboardKasirPage() {
                       {isTransfer ? "TRANSFER MANDIRI / QRIS" : "BAYAR DI KASIR"}
                     </span>
 
-                    {/* Tombol Lihat Bukti Transfer */}
                     {isTransfer && order.payment_proof && (
                       <button
                         onClick={() => setSelectedProof(order.payment_proof || null)}
@@ -332,7 +367,6 @@ export default function DashboardKasirPage() {
                     )}
                   </div>
 
-                  {/* DAFTAR ITEM PESANAN */}
                   <div className="border-t border-b border-white/10 py-3 my-3 space-y-2 max-h-40 overflow-y-auto pr-1">
                     {order.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm">
@@ -345,16 +379,15 @@ export default function DashboardKasirPage() {
                     ))}
                   </div>
 
-                  {/* TOTAL BAYAR */}
                   <div className="flex justify-between items-center font-bold text-base mb-6">
                     <span className="text-gray-400 text-sm">Total:</span>
                     <span className="text-[#D4A373] text-lg">{formatPrice(order.total_price)}</span>
                   </div>
                 </div>
 
-                {/* TOMBOL AKSI DI BAWAH CARD */}
+                {/* TOMBOL AKSI BERDASARKAN STATUS */}
                 <div className="space-y-2">
-                  {/* JIKA STATUS MASIH PENDING */}
+                  {/* STATUS PENDING */}
                   {isPending && (
                     <>
                       {isTransfer ? (
@@ -368,6 +401,7 @@ export default function DashboardKasirPage() {
                         <button
                           onClick={() => {
                             setActiveCashOrder(order);
+                            setCashGiven("");
                             setCashModalOpen(true);
                           }}
                           className="w-full bg-[#D4A373] text-black font-bold py-2.5 rounded-xl text-xs hover:bg-[#c39264] transition shadow-md flex items-center justify-center gap-1.5"
@@ -393,15 +427,15 @@ export default function DashboardKasirPage() {
                     </>
                   )}
 
-                  {/* JIKA STATUS SUDAH DIPROSES / SELESAI */}
-                  {isProsesOrSelesai && (
+                  {/* STATUS PROSES */}
+                  {isProses && (
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <button
-                          onClick={() => updateOrderStatus(order.id, order.status === "proses" ? "selesai" : "proses")}
-                          className="bg-green-500/20 border border-green-500/30 text-green-400 font-semibold py-2 rounded-xl text-xs hover:bg-green-500/30 transition"
+                          onClick={() => updateOrderStatus(order.id, "selesai")}
+                          className="bg-green-500/20 border border-green-500/30 text-green-400 font-semibold py-2 rounded-xl text-xs hover:bg-green-500/30 transition flex items-center justify-center gap-1"
                         >
-                          {order.status === "proses" ? "Tandai Selesai" : "Status: Selesai"}
+                          <CheckCheck size={14} /> Tandai Selesai
                         </button>
                         <button
                           onClick={() => deleteOrder(order.id)}
@@ -420,7 +454,30 @@ export default function DashboardKasirPage() {
                     </div>
                   )}
 
-                  {/* JIKA STATUS BATAL */}
+                  {/* STATUS SELESAI (DIKUNCI / LOCKED) */}
+                  {isSelesai && (
+                    <div className="space-y-2">
+                      <div className="w-full bg-green-500/10 border border-green-500/20 text-green-400 py-2 rounded-xl text-xs font-semibold text-center flex items-center justify-center gap-1.5">
+                        <CheckCircle size={14} /> Pesanan Selesai (Terkunci)
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => printReceipt(order)}
+                          className="w-full bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5"
+                        >
+                          <Printer size={13} /> Cetak Struk
+                        </button>
+                        <button
+                          onClick={() => deleteOrder(order.id)}
+                          className="bg-black/40 border border-white/10 text-gray-400 font-semibold py-2 rounded-xl text-xs hover:text-red-400 transition flex items-center justify-center gap-1"
+                        >
+                          <Trash2 size={13} /> Hapus
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STATUS BATAL */}
                   {order.status === "batal" && (
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -444,7 +501,7 @@ export default function DashboardKasirPage() {
         </div>
       )}
 
-      {/* MODAL LIHAT BUKTI TRANSFER */}
+      {/* MODAL BUKTI TRANSFER */}
       {selectedProof && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 max-w-lg w-full text-center relative shadow-2xl">
@@ -462,57 +519,102 @@ export default function DashboardKasirPage() {
         </div>
       )}
 
-      {/* MODAL PROSES PEMBAYARAN TUNAI & KEMBALIAN */}
+      {/* MODAL PEMBAYARAN TUNAI PREMIUM & KEREN (GLASSMORPHISM) */}
       {cashModalOpen && activeCashOrder && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative text-left">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-serif font-bold text-[#D4A373]">Proses Pembayaran Tunai</h3>
-              <button onClick={() => setCashModalOpen(false)} className="text-gray-400 hover:text-white">
-                <X size={20} />
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xl animate-fade-in">
+          <div className="bg-[#161616] border border-[#D4A373]/30 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative text-left overflow-hidden">
+            
+            {/* Aksen Glow di Background Modal */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#D4A373]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="flex justify-between items-center mb-5 relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="p-2.5 bg-[#D4A373]/10 border border-[#D4A373]/20 rounded-2xl text-[#D4A373]">
+                  <Banknote size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-serif font-bold text-white">Kasir Tunai</h3>
+                  <p className="text-xs text-gray-400">Meja #{activeCashOrder.table_number} — {activeCashOrder.customer_name}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setCashModalOpen(false)} 
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition"
+              >
+                <X size={16} />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="bg-black/40 p-4 rounded-xl border border-white/10 text-xs space-y-1.5 text-gray-300">
-                <p>Meja: <strong>#{activeCashOrder.table_number}</strong></p>
-                <p>Pemesan: <strong>{activeCashOrder.customer_name}</strong></p>
-                <p className="text-sm font-bold text-[#D4A373] pt-1">
-                  Total Tagihan: {formatPrice(activeCashOrder.total_price)}
-                </p>
+            <div className="space-y-5 relative z-10">
+              {/* Tagihan Box */}
+              <div className="bg-black/50 p-4 rounded-2xl border border-white/10 flex justify-between items-center">
+                <span className="text-xs text-gray-400 font-medium">Total Tagihan</span>
+                <span className="text-xl font-bold text-[#D4A373]">{formatPrice(activeCashOrder.total_price)}</span>
               </div>
 
+              {/* Input Uang Tunai */}
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Jumlah Uang Tunai Diterima (Rp)</label>
-                <input
-                  type="number"
-                  value={cashGiven}
-                  onChange={(e) => setCashGiven(e.target.value)}
-                  placeholder="Contoh: 50000"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-[#D4A373] outline-none text-sm"
-                  autoFocus
-                />
+                <label className="block text-xs text-gray-400 mb-1.5 font-medium">Uang Diterima dari Pelanggan (Rp)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">Rp</span>
+                  <input
+                    type="number"
+                    value={cashGiven}
+                    onChange={(e) => setCashGiven(e.target.value)}
+                    placeholder="0"
+                    className="w-full bg-black/60 border border-white/15 rounded-2xl py-3.5 pl-12 pr-4 text-white font-bold text-lg focus:border-[#D4A373] outline-none transition shadow-inner"
+                    autoFocus
+                  />
+                </div>
               </div>
 
+              {/* Tombol Nominal Cepat (Quick Cash Buttons) */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  activeCashOrder.total_price,
+                  20000,
+                  50000,
+                  100000,
+                ].map((nominal, idx) => {
+                  const val = nominal <= activeCashOrder.total_price ? activeCashOrder.total_price : nominal;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCashGiven(val.toString())}
+                      className="bg-white/5 border border-white/10 hover:border-[#D4A373]/50 hover:bg-[#D4A373]/10 text-xs py-2 rounded-xl text-gray-300 font-medium transition"
+                    >
+                      {nominal === activeCashOrder.total_price ? "Pas" : `${nominal / 1000}rb`}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Informasi Kembalian */}
               {cashNumber > 0 && (
-                <div className={`p-4 rounded-xl border text-sm ${changeAmount >= 0 ? "bg-green-500/10 border-green-500/20 text-green-300" : "bg-red-500/10 border-red-500/20 text-red-300"}`}>
+                <div className={`p-4 rounded-2xl border transition-all ${changeAmount >= 0 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-rose-500/10 border-rose-500/30 text-rose-300"}`}>
                   {changeAmount >= 0 ? (
-                    <>
-                      <span>Uang Kembalian:</span>
-                      <p className="text-lg font-bold">{formatPrice(changeAmount)}</p>
-                    </>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium uppercase tracking-wider">Uang Kembalian:</span>
+                      <span className="text-lg font-extrabold">{formatPrice(changeAmount)}</span>
+                    </div>
                   ) : (
-                    <span>Uang tunai kurang {formatPrice(Math.abs(changeAmount))}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium uppercase tracking-wider">Kurang Bayar:</span>
+                      <span className="text-base font-bold">{formatPrice(Math.abs(changeAmount))}</span>
+                    </div>
                   )}
                 </div>
               )}
 
+              {/* Tombol Aksi Konfirmasi */}
               <button
                 onClick={handleProcessCashSubmit}
                 disabled={cashNumber < activeCashOrder.total_price}
-                className="w-full bg-[#D4A373] text-black font-bold py-3 rounded-xl hover:bg-[#c39264] transition disabled:opacity-50 text-sm shadow-lg"
+                className="w-full bg-[#D4A373] text-black font-bold py-3.5 rounded-2xl hover:bg-[#c39264] transition disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow-lg flex items-center justify-center gap-2 mt-2"
               >
-                Konfirmasi & Proses Pesanan
+                <span>Konfirmasi Pembayaran</span>
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
