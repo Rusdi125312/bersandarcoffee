@@ -11,8 +11,9 @@ type MenuItem = {
   nama: string;
   kategori: string;
   harga: number;
+  deskripsi: string;
   gambar: string;
-  variant_type?: string; // Tambahan properti varian
+  variant_type?: string;
 };
 
 export default function AdminMenu() {
@@ -21,14 +22,13 @@ export default function AdminMenu() {
     nama: "",
     kategori: "Minuman",
     harga: 0,
+    deskripsi: "",
     gambar: "",
-    variant_type: "Ice & Hot", // Default varian
+    variant_type: "Ice & Hot", // Default awal untuk minuman
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  // State untuk melacak ID menu yang sedang diedit
   const [editingId, setEditingId] = useState<number | null>(null);
-
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -44,7 +44,6 @@ export default function AdminMenu() {
     if (data) setMenus(data);
   }
 
-  // Fungsi Upload Gambar ke Supabase Storage
   async function uploadImageAndGetUrl(file: File): Promise<string> {
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -65,7 +64,12 @@ export default function AdminMenu() {
     return data.publicUrl;
   }
 
-  // Fungsi Simpan (Tambah Baru / Update)
+  // Cek apakah kategori termasuk minuman/coffee/kopi
+  const isMinuman = 
+    formData.kategori.toLowerCase().includes("minuman") || 
+    formData.kategori.toLowerCase().includes("coffee") || 
+    formData.kategori.toLowerCase().includes("kopi");
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -77,18 +81,17 @@ export default function AdminMenu() {
         finalImageUrl = await uploadImageAndGetUrl(imageFile);
       }
 
-      // Jika bukan Minuman, varian otomatis diset ke "-"
-      const payloadVarian =
-        formData.kategori === "Minuman" ? formData.variant_type : "-";
+      // Jika bukan kategori minuman, varian otomatis diset ke "-"
+      const payloadVarian = isMinuman ? formData.variant_type : "-";
 
       if (editingId !== null) {
-        // MODE EDIT / UPDATE
         const { error } = await supabase
           .from("menu_self_order")
           .update({
             nama: formData.nama,
             kategori: formData.kategori,
             harga: formData.harga,
+            deskripsi: formData.deskripsi,
             gambar: finalImageUrl,
             variant_type: payloadVarian,
           })
@@ -97,12 +100,12 @@ export default function AdminMenu() {
         if (error) throw error;
         alert("Menu berhasil diperbarui!");
       } else {
-        // MODE TAMBAH BARU
         const { error } = await supabase.from("menu_self_order").insert([
           {
             nama: formData.nama,
             kategori: formData.kategori,
             harga: formData.harga,
+            deskripsi: formData.deskripsi,
             gambar: finalImageUrl,
             variant_type: payloadVarian,
           },
@@ -121,27 +124,27 @@ export default function AdminMenu() {
     }
   }
 
-  // Memasukkan data ke form saat tombol "Edit" diklik
   function handleEditClick(item: MenuItem) {
     setEditingId(item.id);
     setFormData({
       nama: item.nama,
       kategori: item.kategori,
       harga: item.harga,
+      deskripsi: item.deskripsi || "",
       gambar: item.gambar,
-      variant_type: item.variant_type || "Ice & Hot",
+      variant_type: item.variant_type && item.variant_type !== "-" ? item.variant_type : "Ice & Hot",
     });
     setImageFile(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Reset Form & State
   function resetForm() {
     setEditingId(null);
     setFormData({
       nama: "",
       kategori: "Minuman",
       harga: 0,
+      deskripsi: "",
       gambar: "",
       variant_type: "Ice & Hot",
     });
@@ -181,15 +184,14 @@ export default function AdminMenu() {
             />
           </Link>
 
-          {/* Menu Desktop */}
           <nav className="hidden md:flex gap-10 font-medium">
-            <a href="/admin/dashboard" className="text-[#D4A373]">
+            <a href="/admin/dashboard" className="hover:text-[#D4A373]">
               Katalog
             </a>
             <a href="/admin/gallery" className="hover:text-[#D4A373]">
               Gallery
             </a>
-            <a href="/admin/menu" className="hover:text-[#D4A373]">
+            <a href="/admin/menu" className="text-[#D4A373]">
               Menu
             </a>
             <a href="/admin/orders" className="hover:text-[#D4A373]">
@@ -197,7 +199,6 @@ export default function AdminMenu() {
             </a>
           </nav>
 
-          {/* Tombol Hamburger & Lihat Website */}
           <div className="flex items-center gap-4">
             <Link
               href="/"
@@ -214,7 +215,6 @@ export default function AdminMenu() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {menuOpen && (
           <div className="md:hidden bg-[#1a1a1a] p-6 border-b border-white/10 flex flex-col gap-4">
             <a href="/admin/dashboard">Katalog Menu</a>
@@ -229,7 +229,6 @@ export default function AdminMenu() {
         )}
       </header>
 
-      {/* Konten Utama */}
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#D4A373]">
@@ -245,15 +244,13 @@ export default function AdminMenu() {
           )}
         </div>
 
-        {/* Form Tambah / Edit Menu */}
         <form
           onSubmit={handleSubmit}
-          className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/10 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+          className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/10 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {/* Input Nama Menu */}
           <input
             placeholder="Nama Menu"
-            className="bg-black p-3 rounded-lg border border-white/10 text-white placeholder-gray-500"
+            className="bg-black p-3 rounded-lg border border-white/10 text-white placeholder-gray-500 text-sm"
             required
             onChange={(e) =>
               setFormData({ ...formData, nama: e.target.value })
@@ -261,41 +258,23 @@ export default function AdminMenu() {
             value={formData.nama}
           />
 
-          {/* Select Kategori */}
           <select
-            className="bg-black p-3 rounded-lg border border-white/10 text-white"
+            className="bg-black p-3 rounded-lg border border-white/10 text-white text-sm"
             onChange={(e) =>
               setFormData({ ...formData, kategori: e.target.value })
             }
             value={formData.kategori}
           >
             <option value="Minuman">Minuman</option>
+            <option value="Coffee">Coffee</option>
             <option value="Makanan">Makanan</option>
             <option value="Cemilan">Cemilan</option>
           </select>
 
-          {/* Select Varian (Hot / Ice / Both) - Hanya Aktif saat Minuman */}
-          <select
-            className={`bg-black p-3 rounded-lg border border-white/10 text-white ${
-              formData.kategori !== "Minuman" ? "opacity-40 cursor-not-allowed" : ""
-            }`}
-            disabled={formData.kategori !== "Minuman"}
-            onChange={(e) =>
-              setFormData({ ...formData, variant_type: e.target.value })
-            }
-            value={formData.variant_type}
-          >
-            <option value="Ice & Hot">Bisa Hot & Ice</option>
-            <option value="Ice Only">-</option>
-            <option value="Ice Only">Hanya Ice (Dingin)</option>
-            <option value="Hot Only">Hanya Hot (Panas)</option>
-          </select>
-
-          {/* Input Harga */}
           <input
             type="number"
             placeholder="Harga (Contoh: 18000)"
-            className="bg-black p-3 rounded-lg border border-white/10 text-white placeholder-gray-500"
+            className="bg-black p-3 rounded-lg border border-white/10 text-white placeholder-gray-500 text-sm"
             required
             onChange={(e) =>
               setFormData({
@@ -306,7 +285,35 @@ export default function AdminMenu() {
             value={formData.harga || ""}
           />
 
-          {/* Upload File Gambar */}
+          <select
+            className={`bg-black p-3 rounded-lg border border-white/10 text-white text-sm ${
+              !isMinuman ? "opacity-45 cursor-not-allowed bg-neutral-900" : ""
+            }`}
+            disabled={!isMinuman}
+            onChange={(e) =>
+              setFormData({ ...formData, variant_type: e.target.value })
+            }
+            value={isMinuman ? formData.variant_type : "-"}
+          >
+            {isMinuman ? (
+              <>
+                <option value="Ice & Hot">Pilihan Varian: Ice / Hot (Bisa Pilih)</option>
+                <option value="-">Tanpa Pilihan Varian (Fixed / Kosong)</option>
+              </>
+            ) : (
+              <option value="-">Tidak Ada Varian (Khusus Makanan/Cemilan)</option>
+            )}
+          </select>
+
+          <input
+            placeholder="Deskripsi Singkat Menu"
+            className="bg-black p-3 rounded-lg border border-white/10 text-white placeholder-gray-500 text-sm"
+            onChange={(e) =>
+              setFormData({ ...formData, deskripsi: e.target.value })
+            }
+            value={formData.deskripsi}
+          />
+
           <div className="flex flex-col justify-center">
             <input
               id="fileInput"
@@ -324,11 +331,10 @@ export default function AdminMenu() {
             </span>
           </div>
 
-          {/* Tombol Simpan */}
           <button
             type="submit"
             disabled={loading}
-            className={`font-bold py-3 rounded-lg col-span-full transition ${
+            className={`font-bold py-3 rounded-lg col-span-full transition text-sm ${
               editingId !== null
                 ? "bg-blue-600 hover:bg-blue-500 text-white"
                 : "bg-[#D4A373] hover:bg-[#c39264] text-black"
@@ -342,15 +348,13 @@ export default function AdminMenu() {
           </button>
         </form>
 
-        {/* List Menu */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {menus.map((m) => (
             <div
               key={m.id}
-              className="bg-[#1a1a1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between gap-4 relative overflow-hidden"
+              className="bg-[#1a1a1a] p-4 rounded-xl border border-white/10 flex flex-col justify-between gap-4 relative overflow-hidden shadow-md"
             >
               <div>
-                {/* Visual Gambar */}
                 {m.gambar ? (
                   <img
                     src={m.gambar}
@@ -363,12 +367,11 @@ export default function AdminMenu() {
                   </div>
                 )}
 
-                {/* Badges Info */}
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400 capitalize">
                     {m.kategori}
                   </span>
-                  {m.kategori === "Minuman" && m.variant_type && (
+                  {m.variant_type && m.variant_type !== "-" && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-[#D4A373] border border-amber-500/30">
                       {m.variant_type}
                     </span>
@@ -376,12 +379,12 @@ export default function AdminMenu() {
                 </div>
 
                 <p className="font-bold text-lg mt-1">{m.nama}</p>
-                <p className="text-[#D4A373] font-bold mt-1">
+                <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{m.deskripsi}</p>
+                <p className="text-[#D4A373] font-bold mt-2">
                   Rp {m.harga.toLocaleString()}
                 </p>
               </div>
 
-              {/* Tombol Action */}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleEditClick(m)}

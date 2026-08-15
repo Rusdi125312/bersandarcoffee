@@ -13,10 +13,12 @@ type MenuItem = {
   harga: number;
   deskripsi: string;
   gambar: string;
+  variant_type?: string;
 };
 
 type CartItem = MenuItem & {
   quantity: number;
+  variant: "Ice" | "Hot" | "-";
 };
 
 export default function OrderPage() {
@@ -37,6 +39,11 @@ export default function OrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState<any>(null);
+  
+  // State untuk menyimpan item yang sedang dipilih variannya
+  const [itemToVariant, setItemToVariant] = useState<MenuItem | null>(null);
+  // State untuk menampung varian yang dipilih user (hanya Ice atau Hot)
+  const [selectedVariant, setSelectedVariant] = useState<"Ice" | "Hot">("Ice");
 
   useEffect(() => {
     fetchMenu();
@@ -61,23 +68,43 @@ export default function OrderPage() {
     return `${(price / 1000).toFixed(1)}k`;
   };
 
-  const addToCart = (item: MenuItem) => {
+  // Handler saat tombol "+ Pilih" diklik
+  const handleOpenVariantModal = (item: MenuItem) => {
+    const hasIceHotVariant = item.variant_type && item.variant_type !== "-";
+    
+    if (hasIceHotVariant) {
+      setItemToVariant(item);
+      setSelectedVariant("Ice"); // Default pilihan pertama
+    } else {
+      addToCartDirect(item, "-");
+    }
+  };
+
+  const addToCartDirect = (item: MenuItem, variant: "Ice" | "Hot" | "-") => {
     setCart((prev) => {
-      const existingIndex = prev.findIndex((i) => i.id === item.id);
+      const existingIndex = prev.findIndex(
+        (i) => i.id === item.id && i.variant === variant
+      );
 
       if (existingIndex > -1) {
         return prev.map((i, index) =>
           index === existingIndex ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...item, quantity: 1, variant }];
     });
+    setItemToVariant(null);
   };
 
-  const decreaseQuantity = (id: number) => {
+  const updateCartQuantity = (id: number, variant: string, delta: number) => {
     setCart((prev) => {
       return prev
-        .map((i) => (i.id === id ? { ...i, quantity: i.quantity - 1 } : i))
+        .map((i) => {
+          if (i.id === id && i.variant === variant) {
+            return { ...i, quantity: i.quantity + delta };
+          }
+          return i;
+        })
         .filter((i) => i.quantity > 0);
     });
   };
@@ -301,7 +328,7 @@ export default function OrderPage() {
                               </div>
 
                               <button
-                                onClick={() => addToCart(item)}
+                                onClick={() => handleOpenVariantModal(item)}
                                 className="w-full mt-4 bg-[#D4A373] text-black font-bold py-2 rounded-xl text-sm hover:bg-[#c39264] transition"
                               >
                                 + Pilih
@@ -317,6 +344,7 @@ export default function OrderPage() {
           )}
         </div>
 
+        {/* Desktop Cart */}
         <div className="hidden lg:block lg:col-span-1">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 sticky top-24 shadow-xl space-y-4">
             <h3 className="text-xl font-serif font-bold text-[#D4A373]">Keranjang Pesanan</h3>
@@ -326,22 +354,24 @@ export default function OrderPage() {
             ) : (
               <div className="space-y-4">
                 <div className="divide-y divide-white/10 max-h-[35vh] overflow-y-auto pr-1">
-                  {cart.map((item, idx) => (
-                    <div key={idx} className="py-3 flex justify-between items-center text-sm">
+                  {cart.map((item) => (
+                    <div key={`${item.id}-${item.variant}`} className="py-3 flex justify-between items-center text-sm">
                       <div className="pr-2 flex-1">
-                        <p className="font-semibold">{item.nama}</p>
+                        <p className="font-semibold">
+                          {item.nama} {item.variant !== "-" && <span className="text-xs text-[#D4A373] font-normal">({item.variant})</span>}
+                        </p>
                         <p className="text-xs text-gray-400 mt-0.5">{formatPrice(item.harga)} x {item.quantity}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                          onClick={() => decreaseQuantity(item.id)}
+                          onClick={() => updateCartQuantity(item.id, item.variant, -1)}
                           className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center font-bold hover:bg-white/20"
                         >
                           -
                         </button>
                         <span className="w-5 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => addToCart(item)}
+                          onClick={() => updateCartQuantity(item.id, item.variant, 1)}
                           className="w-7 h-7 bg-[#D4A373] text-black rounded-lg flex items-center justify-center font-bold hover:bg-[#c39264]"
                         >
                           +
@@ -404,6 +434,7 @@ export default function OrderPage() {
 
       </div>
 
+      {/* Mobile Sticky Bar */}
       {cart.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a]/95 border-t border-white/10 p-4 lg:hidden backdrop-blur-md z-40 flex items-center justify-between shadow-2xl">
           <div>
@@ -419,6 +450,7 @@ export default function OrderPage() {
         </div>
       )}
 
+      {/* Mobile Cart Modal */}
       {isMobileCartOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 flex flex-col justify-end lg:hidden backdrop-blur-sm">
           <div className="bg-[#1a1a1a] border-t border-white/10 rounded-t-3xl p-6 max-h-[85vh] flex flex-col">
@@ -433,22 +465,24 @@ export default function OrderPage() {
             </div>
 
             <div className="divide-y divide-white/10 overflow-y-auto flex-1 pr-1 space-y-2 mb-4">
-              {cart.map((item, idx) => (
-                <div key={idx} className="py-3 flex justify-between items-center text-sm">
+              {cart.map((item) => (
+                <div key={`${item.id}-${item.variant}`} className="py-3 flex justify-between items-center text-sm">
                   <div className="pr-2 flex-1">
-                    <p className="font-semibold">{item.nama}</p>
+                    <p className="font-semibold">
+                      {item.nama} {item.variant !== "-" && <span className="text-xs text-[#D4A373] font-normal">({item.variant})</span>}
+                    </p>
                     <p className="text-xs text-gray-400 mt-0.5">{formatPrice(item.harga)} x {item.quantity}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
-                      onClick={() => decreaseQuantity(item.id)}
+                      onClick={() => updateCartQuantity(item.id, item.variant, -1)}
                       className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center font-bold"
                     >
                       -
                     </button>
                     <span className="w-5 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => addToCart(item)}
+                      onClick={() => updateCartQuantity(item.id, item.variant, 1)}
                       className="w-7 h-7 bg-[#D4A373] text-black rounded-lg flex items-center justify-center font-bold"
                     >
                       +
@@ -504,6 +538,49 @@ export default function OrderPage() {
         </div>
       )}
 
+      {/* Modal Pilih Varian (Hanya Ice / Hot) */}
+      {itemToVariant && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+            <h3 className="text-xl font-serif font-bold text-[#D4A373] mb-1">Pilih Varian</h3>
+            <p className="text-sm text-gray-400 mb-4">{itemToVariant.nama}</p>
+
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              {(["Ice", "Hot"] as const).map((variant) => (
+                <button
+                  key={variant}
+                  type="button"
+                  onClick={() => setSelectedVariant(variant)}
+                  className={`py-3 text-xs font-bold rounded-xl border transition ${
+                    selectedVariant === variant
+                      ? "bg-[#D4A373] text-black border-[#D4A373]"
+                      : "bg-black/40 text-gray-400 border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  {variant}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setItemToVariant(null)}
+                className="flex-1 bg-white/10 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-white/20 transition"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => addToCartDirect(itemToVariant, selectedVariant)}
+                className="flex-1 bg-[#D4A373] text-black font-bold py-2.5 rounded-xl text-sm hover:bg-[#c39264] transition"
+              >
+                Masukkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Instruction Modal */}
       {paymentStep === "instruction" && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative text-left">
@@ -562,6 +639,7 @@ export default function OrderPage() {
         </div>
       )}
 
+      {/* Success Modal */}
       {orderSuccessData && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl relative">
