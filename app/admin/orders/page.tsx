@@ -64,7 +64,7 @@ export default function DashboardKasirPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "menu_order" },
         (payload) => {
-        if (payload.eventType === "INSERT") {
+        if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             const audio = new Audio("/notification.mpeg");
             audio.play().catch((err) => console.log("Audio diblokir browser:", err));
           }
