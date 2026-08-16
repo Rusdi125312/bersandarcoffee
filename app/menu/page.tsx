@@ -141,36 +141,64 @@
               <div className="absolute inset-0 bg-black/70" />
             </div>
             <div className="relative z-10 max-w-7xl mx-auto px-8 pt-32 grid md:grid-cols-2 gap-12 items-center">
-              <div className="max-w-2xl text-left">
-              <div>
-                <p className="text-[#D4A373] tracking-[6px] uppercase">
-                  Bersandar Coffee & Space
-                </p>
-                <h1 className="
-                  text-4xl
-                  md:text-6xl
-                  lg:text-8xl
-                  font-serif
-                  leading-none
-                  mt-4
-                ">
-                  MENU
-                </h1>
+  <div className="max-w-2xl text-left">
+    <div>
+      <p className="text-[#D4A373] tracking-[6px] uppercase text-sm md:text-base font-medium">
+        Bersandar Coffee & Space
+      </p>
+      
+      <h1 className="
+        text-4xl
+        md:text-6xl
+        lg:text-8xl
+        font-serif
+        leading-none
+        mt-4
+      ">
+        MENU
+      </h1>
 
-                <p className="
-                  text-gray-300
-                  mt-6
-                  max-w-md
-                ">
-                  Temukan kopi terbaik,
-                  minuman spesial,
-                  dan hidangan pilihan
-                  dari Bersandar Coffee & Space.
-                </p>
+      <p className="
+        text-gray-300
+        mt-6
+        max-w-md
+        text-base
+        md:text-lg
+        leading-relaxed
+      ">
+        Temukan kopi terbaik, minuman spesial, dan hidangan pilihan dari Bersandar Coffee & Space.
+      </p>
 
-              </div>
-              </div>
-            </div>
+      {/* Tombol diposisikan rapi di dalam container teks */}
+      <div className="mt-8">
+        <Link
+          href="/order"
+          className="
+            inline-flex items-center justify-center gap-2
+            bg-[#D4A373] text-black font-semibold
+            px-8 py-4 rounded-xl
+            shadow-lg shadow-[#D4A373]/20
+            hover:bg-[#c39264] hover:shadow-[#c39264]/30
+            active:scale-95
+            transition-all duration-200
+          "
+        >
+          <span>Mulai Pesan Makanan</span>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      </div>
+
+    </div>
+  </div>
+</div>
 
           </section>
 
@@ -263,13 +291,7 @@
       </div>
     ))}
 
-    <Link
-  href="/order"
-  className="bg-[#D4A373] text-black font-bold px-6 py-3 rounded-xl hover:bg-[#c39264] transition"
->
-  Mulai Pesan Makanan
-</Link>
-
+ 
   </section>
         )}
       <footer className="w-full py-10 bg-[#0a0a0a] text-center border-t border-white/10 mt-20">
