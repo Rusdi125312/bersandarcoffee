@@ -263,7 +263,7 @@ export default function DashboardKasirPage() {
         
         {menuOpen && (
           <div className="md:hidden bg-[#1a1a1a] p-6 border-b border-white/10 flex flex-col gap-4 text-sm">
-            <a href="/admin/dashboard" className="hover:text-[#D4A373]">Katalog Menu</a>
+            <a href="/admin/dashboard" className="hover:text-[#D4A373]">Katalog</a>
             <a href="/admin/gallery" className="hover:text-[#D4A373]">Gallery</a>
             <a href="/admin/menu" className="hover:text-[#D4A373]">Menu</a>
             <a href="/admin/orders" className="text-[#D4A373]">Pesanan</a>

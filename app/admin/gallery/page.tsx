@@ -94,7 +94,7 @@ export default function AdminGalleryPage() {
           {/* Mobile Menu */}
           {menuOpen && (
             <div className="md:hidden bg-[#1a1a1a] p-6 border-b border-white/10 flex flex-col gap-4">
-              <a href="/admin/dashboard">Katalog Menu</a>
+              <a href="/admin/dashboard">Katalog</a>
               <a href="/admin/gallery" className="text-[#D4A373]">Gallery</a>
               <a href="/admin/menu">Menu</a>
               <a href="/admin/orders">Pesanan</a>
