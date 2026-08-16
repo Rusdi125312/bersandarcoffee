@@ -39,10 +39,9 @@ export default function OrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState<any>(null);
-  
-  // State untuk menyimpan item yang sedang dipilih variannya
+
   const [itemToVariant, setItemToVariant] = useState<MenuItem | null>(null);
-  // State untuk menampung varian yang dipilih user (hanya Ice atau Hot)
+  
   const [selectedVariant, setSelectedVariant] = useState<"Ice" | "Hot">("Ice");
 
   useEffect(() => {
@@ -60,6 +59,7 @@ export default function OrderPage() {
     }
     setLoading(false);
   }
+
 
   const formatPrice = (price: number) => {
     if (price >= 1000 && price % 1000 === 0) {
@@ -629,8 +629,7 @@ export default function OrderPage() {
 
                 <button
                   onClick={finalizeOrderSuccess}
-                  className="w-full bg-[#D4A373] text-black font-bold py-3 rounded-xl hover:bg-[#c39264] transition shadow-lg text-sm"
-                >
+                  className="w-full bg-[#D4A373] text-black font-bold py-3 rounded-xl hover:bg-[#c39264] transition shadow-lg text-sm">
                   Selesai & Tunggu Pesanan
                 </button>
               </div>
