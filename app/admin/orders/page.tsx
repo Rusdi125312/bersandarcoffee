@@ -63,7 +63,11 @@ export default function DashboardKasirPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "menu_order" },
-        () => {
+        (payload) => {
+        if (payload.eventType === "INSERT") {
+            const audio = new Audio("/notification.mpeg");
+            audio.play().catch((err) => console.log("Audio diblokir browser:", err));
+          }
           fetchOrders();
         }
       )
