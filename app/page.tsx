@@ -40,48 +40,58 @@ export default function Home() {
   ];
 
   return (
-  <main className="bg-[#111] text-white">
-  <nav className="absolute top-0 left-0 right-0 z-50">
-  
-  <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between">
-         {/* Logo (Kiri) - Merapat ke kiri */}
-         <div className="flex items-center gap-3 justify-start">
-             <Link href="/" className="relative ml-4 w-20 h-16 md:w-32 md:h-24 transition-transform hover:scale-105">
-                  <Image src="/logo-bersandar1.png" alt="Logo Bersandar" fill className="object-contain" priority/>
-              </Link>
-         </div>
-        
-       {/* Menu Desktop */}
-    <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-10 font-medium">
-      <a href="/" className="relative">Home<span className="absolute -bottom-3 left-0 w-full h-[2px] bg-[#D4A373]" /></a>
-      <a href="/menu" className="hover:text-[#D4A373]">Menu</a>
-      <a href="/gallery" className="hover:text-[#D4A373]">Gallery</a>
-      <a href="/contact" className="hover:text-[#D4A373]">Contact</a>
-    </div>
-
-      {/* Tombol Hamburger (Mobile) */}
-    <button className="lg:hidden p-2 text-white" onClick={() => setMenuOpen(!menuOpen)}>
-        {menuOpen ? <X size={28} /> : <Menu size={28} />}
-    </button>
-
+     <main className="min-h-screen bg-[#111111] text-white">
+              {/* HEADER */}
+              <header className="absolute top-0 left-0 w-full z-50">
+    
+               <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between">
+                <div className="flex items-center gap-3 justify-start">
+                <Link href="/" className="relative ml-4 w-20 h-16 md:w-32 md:h-24 transition-transform hover:scale-105">
+                      <Image 
+                        src="/logo-bersandar1.png" 
+                        alt="Logo Bersandar"
+                        fill
+                        className="object-contain"
+                        priority
+                      />
+                    </Link>
+              </div>
+          {/* Tombol Hamburger (Hanya muncul di mobile) */}
+          <button className="md:hidden p-2 -mr-2" onClick={() => setMenuOpen(!menuOpen)}>
+                        {menuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+                  <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-10 font-medium">
+    
+                    <a href="/" className="text-[#D4A373]">Home</a>
+                    <a href="/menu" className="hover:text-[#D4A373]">Menu</a>
+                    <a href="/gallery" className="hover:text-[#D4A373]">Gallery</a>
+                    <a href="/contact" className="hover:text-[#D4A373]">Contact</a>
+                  </nav>
+              
+                  <a href="https://wa.me/6285280020604?text=Halo%20Admin%20Bersandar,%20saya%20ingin%20melakukan%20reservasi%20tempat." 
+                    target="_blank"
+                    className="
+                     hidden md:flex border border-white/20 hover:border-[#D4A373] px-6 py-2 rounded-xl hover:bg-[#D4A373] transition whitespace-nowrap"
+                  >Reservasi</a>
+    
+                </div>
+              
+    
+      {/* Overlay Menu Mobile */}
+        {menuOpen && (
+          <div className="md:hidden absolute top-full left-0 w-full bg-[#111111]/95 backdrop-blur-md border-b border-white/10 flex flex-col items-center py-8 gap-6 z-50 shadow-2xl">
+            <a href="/" className="text-[#D4A373]"onClick={() => setMenuOpen(false)}>Home</a>
+            <a href="/menu" onClick={() => setMenuOpen(false)}>Menu</a>
+            <a href="/gallery" onClick={() => setMenuOpen(false)}>Gallery</a>
+            <a href="/contact" onClick={() => setMenuOpen(false)}>Contact</a>
       {/* Lokasi */}
    <a href="https://maps.app.goo.gl/6XYDm94RiDr1RMSy5" target="_blank" rel="noopener noreferrer"
     className="bg-[#D4A373]/90 px-4 py-2 md:px-6 md:py-3 rounded-xl flex items-center gap-2 text-sm md:text-base hover:bg-[#D4A373] transition">
       <MapPin size={16} /> <span className="hidden md:inline">Lokasi Kami</span>
   </a>
   </div>
-  {menuOpen && (
-          <div className="lg:hidden absolute top-full left-0 w-full bg-[#111]/95 backdrop-blur-md border-b border-white/10 flex flex-col items-center py-10 gap-6 animate-in fade-in slide-in-from-top-5">
-            <a href="/" onClick={() => setMenuOpen(false)}>Home</a>
-            <a href="/menu" onClick={() => setMenuOpen(false)}>Menu</a>
-            <a href="/gallery" onClick={() => setMenuOpen(false)}>Gallery</a>
-            <a href="/contact" onClick={() => setMenuOpen(false)}>Contact</a>
-            <a href="https://maps.app.goo.gl/6XYDm94RiDr1RMSy5" className="mt-4 bg-[#D4A373] px-8 py-3 rounded-xl flex items-center gap-2">
-              <MapPin size={16} /> Lokasi Kami
-            </a>
-          </div>
-        )}
-</nav>
+   )}
+  </header>
       {/* ================= HERO ================= */}
   <section
       className="relative min-h-screen flex items-center px-6 md:px-16"
