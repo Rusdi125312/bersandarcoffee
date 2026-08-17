@@ -17,7 +17,7 @@ export default function AdminLayout({
         { event: "INSERT", schema: "public", table: "menu_order" },
         (payload) => {
           // Putar audio notifikasi
-          const audio = new Audio("/notification.mpeg");
+          const audio = new Audio("/notification111.mpeg");
           audio.play().catch((err) => console.log("Audio diblokir browser:", err));
         }
       )
