@@ -65,7 +65,7 @@ export default function DashboardKasirPage() {
         { event: "*", schema: "public", table: "menu_order" },
         (payload) => {
         if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
-            const audio = new Audio("/notification.mpeg");
+            const audio = new Audio("/notification1.mpeg");
             audio.play().catch((err) => console.log("Audio diblokir browser:", err));
           }
           fetchOrders();
