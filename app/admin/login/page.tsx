@@ -32,7 +32,7 @@ export default function LoginPage() {
     } = await supabase.auth.getSession();
 
     if (session) {
-      router.push("/admin/login");
+      router.push("/admin/dashboard");
     }
   }
 

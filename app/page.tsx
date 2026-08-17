@@ -68,11 +68,10 @@ export default function Home() {
                     <a href="/contact" className="hover:text-[#D4A373]">Contact</a>
                   </nav>
               
-                  <a href="https://wa.me/6285280020604?text=Halo%20Admin%20Bersandar,%20saya%20ingin%20melakukan%20reservasi%20tempat." 
-                    target="_blank"
-                    className="
-                     hidden md:flex border border-white/20 hover:border-[#D4A373] px-6 py-2 rounded-xl hover:bg-[#D4A373] transition whitespace-nowrap"
-                  >Reservasi</a>
+                   <a href="https://maps.app.goo.gl/6XYDm94RiDr1RMSy5" target="_blank" rel="noopener noreferrer"
+                    className="bg-[#D4A373]/90 px-4 py-2 md:px-6 md:py-3 rounded-xl flex items-center gap-2 text-sm md:text-base hover:bg-[#D4A373] transition">
+                      <MapPin size={16} /> <span className="hidden md:inline">Lokasi Kami</span>
+                  </a>
     
                 </div>
               
