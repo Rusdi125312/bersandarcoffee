@@ -109,7 +109,7 @@ export default function RestokPage() {
               ← Kembali
             </Link>
             <h1 className="font-serif text-lg font-bold text-[#D4A373] text-center">
-              Self-Order
+              Restock
             </h1>
             <div className="relative ml-auto w-20 h-12 md:w-28 md:h-16">
               <Image
@@ -125,7 +125,7 @@ export default function RestokPage() {
       {/* KONTEN UTAMA */}
       <div className="max-w-4xl mx-auto px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#D4A373]">Manajemen Restok Bahan Baku</h1>
+          <h1 className="text-3xl font-bold text-[#D4A373]">Manajemen Restock Bahan Baku</h1>
           <p className="text-xs text-gray-400 mt-1">Tambah stok barang gudang atau daftarkan bahan baku baru secara real-time.</p>
         </div>
 
