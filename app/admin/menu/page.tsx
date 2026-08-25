@@ -197,6 +197,7 @@ export default function AdminMenu() {
             <a href="/admin/orders" className="hover:text-[#D4A373]">
               Pesanan
             </a>
+            <a href="/admin/management" className="hover:text-[#D4A373]">Management</a>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -223,6 +224,7 @@ export default function AdminMenu() {
               Menu
             </a>
             <a href="/admin/orders">Pesanan</a>
+            <a href="/admin/management">Management</a>
             <hr className="border-white/10" />
             <a href="/">Lihat Website</a>
           </div>
