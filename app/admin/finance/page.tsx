@@ -140,7 +140,7 @@ export default function FinancePage() {
   return (
      <main className="min-h-screen bg-[#111111] text-white pb-32">
           <header className="border-b border-white/10 bg-[#111111]/90 sticky top-0 z-50 grid grid-cols-3 items-center py-4 px-6 backdrop-blur-md">
-            <Link href="/menu" className="text-sm text-gray-400 hover:text-[#D4A373] transition">
+            <Link href="/admin/management" className="text-sm text-gray-400 hover:text-[#D4A373] transition">
               ← Kembali
             </Link>
             <h1 className="font-serif text-lg font-bold text-[#D4A373] text-center">
