@@ -84,7 +84,7 @@ export default function ManagementHubPage() {
     
               <div className="flex items-center gap-4">
                 <Link href="/" className="hidden md:flex px-4 py-2 border border-white/10 rounded-xl hover:bg-white/10 items-center gap-2 text-sm">
-                  <Globe size={16} /> Kembali
+                  <Globe size={16} /> Website
                 </Link>
                 <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
                   {menuOpen ? <X size={28} /> : <Menu size={28} />}
