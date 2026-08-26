@@ -133,7 +133,7 @@ export default function RestokPage() {
           
           {/* PILIHAN MODE: PILIH BARANG ADA / TAMBAH BARU */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <span className="text-sm font-semibold text-gray-300">Jenis Input Restok:</span>
+            <span className="text-sm font-semibold text-gray-300">Jenis Input Restock:</span>
             <button
               type="button"
               onClick={() => setIsNewBahan(!isNewBahan)}
@@ -241,7 +241,7 @@ export default function RestokPage() {
             disabled={loading}
             className="w-full bg-[#D4A373] hover:bg-[#c39264] text-black font-bold py-3 rounded-lg transition text-sm flex items-center justify-center gap-2"
           >
-            {loading ? "Menyimpan..." : "Simpan Restok Barang"}
+            {loading ? "Menyimpan..." : "Simpan Restock Barang"}
           </button>
         </form>
 
