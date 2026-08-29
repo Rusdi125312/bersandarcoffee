@@ -37,6 +37,7 @@ type Order = {
   total_price: number;
   payment_method: string;
   payment_proof?: string | null;
+  order_type?: "dine-in" | "takeaway"; // <-- Tambahkan baris ini
   status: "pending" | "proses" | "selesai" | "batal";
   created_at?: string;
 };
@@ -207,6 +208,7 @@ export default function DashboardKasirPage() {
           <div class="divider"></div>
           <p style="text-align: left;">No Meja: #${order.table_number}</p>
           <p style="text-align: left;">Pemesan: ${order.customer_name}</p>
+          <p style="text-align: left; font-weight: bold;">Tipe: ${order.order_type === "takeaway" ? "BUNGKUS (TAKEAWAY)" : "MAKAN DI TEMPAT (DINE-IN)"}</p 77777777777777
           <p style="text-align: left;">Tanggal: ${new Date().toLocaleString("id-ID")}</p>
           <div class="divider"></div>
           <div>
@@ -358,7 +360,18 @@ export default function DashboardKasirPage() {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <div>
+                      <div className="flex items-center gap-2">
                       <h3 className="text-xl font-bold text-white">Meja {order.table_number}</h3>
+                      {/* Badge Dine-in atau Takeaway */}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                        order.order_type === "takeaway" 
+                          ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" 
+                          : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                      }`}>
+                        {order.order_type === "takeaway" ? "🛍️ Bungkus" : "🍽️ Dine-in"}
+                      </span>
+                      </div>
+                
                       <p className="text-xs text-[#D4A373] font-medium mt-0.5">Pemesan: {order.customer_name}</p>
                     </div>
                     <span

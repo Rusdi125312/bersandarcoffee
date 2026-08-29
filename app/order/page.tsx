@@ -44,6 +44,8 @@ export default function OrderPage() {
   
   const [selectedVariant, setSelectedVariant] = useState<"Ice" | "Hot">("Ice");
 
+  const [orderType, setOrderType] = useState<"dine-in" | "takeaway">("dine-in");
+
   useEffect(() => {
     fetchMenu();
   }, []);
@@ -138,6 +140,7 @@ export default function OrderPage() {
         items: cart,
         total_price: totalPrice,
         payment_method: paymentMethod,
+        order_type: orderType, // <-- Tambahkan baris ini
         payment_proof: null,
         status: "pending",
       };
@@ -275,6 +278,35 @@ export default function OrderPage() {
                 />
               </div>
             </div>
+
+            {/* Pilihan Tipe Pesanan (Dine-in / Takeaway) */}
+<div className="mt-4">
+  <label className="block text-sm text-gray-400 mb-2 font-medium">Tipe Pesanan</label>
+  <div className="grid grid-cols-2 gap-3">
+    <button
+      type="button"
+      onClick={() => setOrderType("dine-in")}
+      className={`py-3 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-2 ${
+        orderType === "dine-in"
+          ? "bg-[#D4A373] text-black border-[#D4A373]"
+          : "bg-black/40 text-gray-300 border-white/10 hover:border-white/20"
+      }`}
+    >
+      🍽️ Makan di Tempat
+    </button>
+    <button
+      type="button"
+      onClick={() => setOrderType("takeaway")}
+      className={`py-3 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-2 ${
+        orderType === "takeaway"
+          ? "bg-[#D4A373] text-black border-[#D4A373]"
+          : "bg-black/40 text-gray-300 border-white/10 hover:border-white/20"
+      }`}
+    >
+      🛍️ Bungkus
+    </button>
+  </div>
+</div>
           </div>
 
           <div className="flex flex-nowrap overflow-x-auto scrollbar-hide gap-3 py-2">
