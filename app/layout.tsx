@@ -22,6 +22,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bersandar Cofee and Space",
   description: "Tempat ngopi, nongkrong, dan bekerja di Cirebon. Nikmati kopi berkualitas, ruang nyaman, dan fasilitas lengkap di Bersandar Coffee & Space.",
+icons: {
+    icon: "/icon.png", // Sesuaikan dengan nama file gambar logo Anda di folder public
+  },
 };
 
 export default function RootLayout({
