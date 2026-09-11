@@ -191,14 +191,15 @@ export default function DashboardKasirPage() {
     if (!printWindow) return;
 
     const htmlContent = `
-      <html>
-        <head>
+     <head>
           <title>Struk Pesanan - Meja #${order.table_number}</title>
           <style>
             body { font-family: monospace; width: 300px; padding: 10px; color: #000; }
             h2, p { text-align: center; margin: 0 0 5px 0; }
             .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
-            .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
+            .item-container { margin-bottom: 8px; font-size: 12px; }
+            .item-header { display: flex; justify-content: space-between; font-weight: bold; }
+            .item-details { display: flex; justify-content: space-between; color: #333; font-size: 11px; padding-left: 5px; margin-top: 2px; }
             .total-row { display: flex; justify-content: space-between; font-weight: bold; margin-top: 10px; font-size: 14px; }
           </style>
         </head>
@@ -208,16 +209,22 @@ export default function DashboardKasirPage() {
           <div class="divider"></div>
           <p style="text-align: left;">No Meja: #${order.table_number}</p>
           <p style="text-align: left;">Pemesan: ${order.customer_name}</p>
-          <p style="text-align: left; font-weight: bold;">Tipe: ${order.order_type === "takeaway" ? "BUNGKUS (TAKEAWAY)" : "MAKAN DI TEMPAT (DINE-IN)"}</p 77777777777777
+          <p style="text-align: left; font-weight: bold;">Tipe: ${order.order_type === "takeaway" ? "TAKEAWAY" : "DINE-IN"}</p>
           <p style="text-align: left;">Tanggal: ${new Date().toLocaleString("id-ID")}</p>
           <div class="divider"></div>
           <div>
             ${order.items
               .map(
                 (item) => `
-              <div class="item-row">
-                <span>${item.nama} ${item.variant ? `(${item.variant})` : ""} x${item.quantity}</span>
-                <span>${formatPrice(item.harga * item.quantity)}</span>
+              <div class="item-container">
+                <div class="item-header">
+                  <span>${item.nama} ${item.variant ? `(${item.variant})` : ""}</span>
+                  <span>x${item.quantity}</span>
+                </div>
+                <div class="item-details">
+                  <span>@ ${formatPrice(item.harga)}</span>
+                  <span>${formatPrice(item.harga * item.quantity)}</span>
+                </div>
               </div>
             `
               )
@@ -305,7 +312,7 @@ export default function DashboardKasirPage() {
               </div>
             )}
           </header>
-
+      <br />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-3xl font-serif font-bold text-[#D4A373]">Dashboard Kasir</h1>

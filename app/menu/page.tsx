@@ -169,32 +169,7 @@
         Temukan kopi terbaik, minuman spesial, dan hidangan pilihan dari Bersandar Coffee & Space.
       </p>
 
-      {/* Tombol diposisikan rapi di dalam container teks */}
-      <div className="mt-8">
-        <Link
-          href="/order"
-          className="
-            inline-flex items-center justify-center gap-2
-            bg-[#D4A373] text-black font-semibold
-            px-8 py-4 rounded-xl
-            shadow-lg shadow-[#D4A373]/20
-            hover:bg-[#c39264] hover:shadow-[#c39264]/30
-            active:scale-95
-            transition-all duration-200
-          "
-        >
-          <span>Mulai Pesan Makanan</span>
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="w-5 h-5 transition-transform group-hover:translate-x-1" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </Link>
-      </div>
+     
 
     </div>
   </div>
